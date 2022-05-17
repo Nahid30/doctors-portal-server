@@ -34,7 +34,7 @@ function verifyJWT(req, res, next){
   });
 }
 
-// support session 
+// support session needed
 
 async function run() {
   try {
