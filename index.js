@@ -1,10 +1,11 @@
 const express = require('express')
 const cors = require('cors');
-const app = express()
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion } = require('mongodb');
+
+const app = express()
+const port = process.env.PORT || 5000;
 
 
 
@@ -19,15 +20,14 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req, res, next){
-  console.log('abc');
   const authHeader = req.headers.authorization;
   if(!authHeader){
-    return res.status(401).send({massage:'Unauthorized'});
+    return res.status(401).send({massage:'Unauthorized access'});
   }
   const token = authHeader.split(' ')[1];
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded) {
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
     if(err){
-      return res.status(403).send({message:'Forbidden'})
+      return res.status(403).send({message:'Forbidden access'})
     }
     req.decoded= decoded;
     next();
@@ -45,7 +45,7 @@ async function run() {
 
     app.get('/service', async (req, res) => {
       const query = {};
-      const cursor = serviceCollection.find(query);
+      const cursor = serviceCollection.find(query).project({name: 1}) ;
       const services = await cursor.toArray();
       res.send(services);
     });
@@ -61,7 +61,9 @@ async function run() {
       const email = req.params.email;
       const user = await userCollection.findOne({email: email});
       const isAdmin = user.role === 'admin';
-      res.send(isAdmin); 
+      // res.send(isAdmin); 
+      res.send({ admin: isAdmin })
+
     })
 
     app.put('/user/admin/:email', verifyJWT, async (req, res) => {
